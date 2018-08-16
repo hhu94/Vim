@@ -460,31 +460,6 @@ class CommandPreviousSearchMatch extends BaseMovement {
 }
 
 @RegisterAction
-export class MarkMovementBOL extends BaseMovement {
-  keys = ["'", '<character>'];
-
-  public async execAction(position: Position, vimState: VimState): Promise<Position> {
-    const markName = this.keysPressed[1];
-    const mark = vimState.historyTracker.getMark(markName);
-
-    vimState.currentRegisterMode = RegisterMode.LineWise;
-
-    return mark.position.getFirstLineNonBlankChar();
-  }
-}
-
-@RegisterAction
-export class MarkMovement extends BaseMovement {
-  keys = ['`', '<character>'];
-
-  public async execAction(position: Position, vimState: VimState): Promise<Position> {
-    const markName = this.keysPressed[1];
-    const mark = vimState.historyTracker.getMark(markName);
-
-    return mark.position;
-  }
-}
-@RegisterAction
 export class MoveLeft extends BaseMovement {
   keys = ['h'];
 

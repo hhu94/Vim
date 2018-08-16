@@ -1277,6 +1277,31 @@ export class MarkCommand extends BaseCommand {
 }
 
 @RegisterAction
+export class MarkMovement extends BaseCommand {
+  keys = ["'", '<character>'];
+  modes = [ModeName.Normal, ModeName.Visual, ModeName.VisualLine, ModeName.VisualBlock];
+
+  public async exec(position: Position, vimState: VimState): Promise<VimState> {
+    const markName = this.keysPressed[1];
+    const mark = vimState.historyTracker.getMark(markName);
+    vimState.cursorPosition = mark.position;
+    return CommandCenterScroll.centerCursorVertically(vimState);
+  }
+}
+
+@RegisterAction
+export class MarkMovementBOL extends MarkMovement {
+  keys = ['`', '<character>'];
+
+  public async exec(position: Position, vimState: VimState): Promise<VimState> {
+    vimState = await super.exec(position, vimState);
+    vimState.currentRegisterMode = RegisterMode.LineWise;
+    vimState.cursorPosition = vimState.cursorPosition.getFirstLineNonBlankChar();
+    return vimState;
+  }
+}
+
+@RegisterAction
 export class PutCommand extends BaseCommand {
   keys = ['p'];
   modes = [ModeName.Normal];
@@ -2029,6 +2054,14 @@ class CommandCenterScroll extends BaseCommand {
   modes = [ModeName.Normal, ModeName.Visual, ModeName.VisualLine, ModeName.VisualBlock];
   keys = ['z', 'z'];
 
+  public static centerCursorVertically(vimState: VimState): VimState {
+    vimState.editor.revealRange(
+      new vscode.Range(vimState.cursorPosition, vimState.cursorPosition),
+      vscode.TextEditorRevealType.InCenter
+    );
+    return vimState;
+  }
+
   public doesActionApply(vimState: VimState, keysPressed: string[]): boolean {
     // Don't run if there's an operator because the Sneak plugin uses <operator>z
     return (
@@ -2037,13 +2070,7 @@ class CommandCenterScroll extends BaseCommand {
   }
 
   public async exec(position: Position, vimState: VimState): Promise<VimState> {
-    // In these modes you want to center on the cursor position
-    vimState.editor.revealRange(
-      new vscode.Range(vimState.cursorPosition, vimState.cursorPosition),
-      vscode.TextEditorRevealType.InCenter
-    );
-
-    return vimState;
+    return CommandCenterScroll.centerCursorVertically(vimState);
   }
 }
 
